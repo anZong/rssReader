@@ -1,28 +1,31 @@
 # coding:UTF-8
 from django.db import models
+
 from base.models import BaseModel
+from base.utils import obj2dic
 
 
 class User(BaseModel):
-    username = models.TextField(verbose_name=u'用户名', max_length=32, unique=True, editable=False, blank=True, null=True)
-    password = models.TextField(verbose_name=u'密码', max_length=128, blank=True, null=True)
+    username = models.TextField(verbose_name=u'用户名', max_length=32, unique=True, editable=False, blank=False, null=False)
+    password = models.TextField(verbose_name=u'密码', max_length=128, blank=False, null=False)
     nickname = models.TextField(verbose_name=u'昵称', max_length=32, default='')
     phone = models.TextField(verbose_name=u'手机号码', max_length=11, blank=False, null=False)
     email = models.EmailField(verbose_name=u'邮箱', max_length=32, blank=True, null=True)
     openid = models.TextField(verbose_name=u'微信openid', default='')
+    avatar = models.TextField(verbose_name='头像', default='')
+    gender = models.IntegerField(verbose_name=u'性别', choices=((0, '未知'), (1, '男'), (2, '女')), default=1)
+    country = models.TextField(verbose_name='国家', default='')
+    province = models.TextField(verbose_name='省份', default='')
+    city = models.TextField(verbose_name='城市', default='')
+    age = models.IntegerField(verbose_name='年龄', default=18)
+
+    def to_json(self):
+        return obj2dic(self, ['id', 'created', 'username'], {})
+
+    def to_simple_json(self):
+        return obj2dic(self, ['id', 'username'], {})
 
     class Meta:
         ordering = ['id']
         verbose_name = u'用户'
-        verbose_name_plural = verbose_name
-
-
-class RssUrls(BaseModel):
-    owner = models.ForeignKey(to=User, verbose_name=u'所属用户', on_delete=models.CASCADE, null=False, blank=False)
-    title = models.TextField(verbose_name=u'标题', null=False, blank=False)
-    url = models.URLField(verbose_name=u'链接地址', null=False, blank=False)
-
-    class Meta:
-        ordering = ['id']
-        verbose_name = u'Rss地址'
         verbose_name_plural = verbose_name
