@@ -36,7 +36,7 @@ class ApiView(BaseView):
         except Exception as e:
             res = {
                 'code': -1,
-                'msg': e.args[0]
+                'msg': e.args[0] if e.args else 'error!'
             }
 
         return self.api_response(res)

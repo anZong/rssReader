@@ -1,7 +1,6 @@
 # coding:UTF-8
 from datetime import date, datetime
-from urllib import parse, request
-import json
+import json, requests
 
 
 def dict_assign(d1, k, d2):
@@ -33,29 +32,23 @@ def obj2dic(o, k, d):
     return d
 
 
-def gen_pager_array(query, params):
+def gen_pager_array(query, params, trans=None):
     page = int(params.get('page', 1))
     size = int(params.get('size', 10))
     start = (page - 1) * size
     end = page * size - 1
     query = query[start:end]
-    return [item.to_json() for item in query]
+    return [trans(item) if trans else item.to_json() for item in query]
 
 
 def py3get(url, data):
-    data = parse.urlencode(data)
-    req = request.Request(url='%s?%s' % (url, data))
-    res = request.urlopen(req)
-    res = res.read()
-    return res
+    res = requests.get(url, data)
+    return res.text
 
 
 def py3post(url, data):
-    data = json.dumps(data).encode(encoding='utf-8')
-    req = request.Request(url=url, data=data, headers={"Content-Type": "application/json"})
-    res = request.urlopen(req)
-    res = res.read()
-    return res
+    res = requests.post(url, data)
+    return res.text
 
 
 class JsonEncoder(json.JSONEncoder):

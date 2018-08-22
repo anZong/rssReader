@@ -6,10 +6,10 @@ from base.utils import obj2dic
 
 
 class User(BaseModel):
-    username = models.TextField(verbose_name=u'用户名', max_length=32, unique=True, editable=False, blank=False, null=False)
-    password = models.TextField(verbose_name=u'密码', max_length=128, blank=False, null=False)
+    username = models.TextField(verbose_name=u'用户名', max_length=32, unique=True, editable=False, blank=True, null=True)
+    password = models.TextField(verbose_name=u'密码', max_length=128, blank=True, null=True)
     nickname = models.TextField(verbose_name=u'昵称', max_length=32, default='')
-    phone = models.TextField(verbose_name=u'手机号码', max_length=11, blank=False, null=False)
+    phone = models.TextField(verbose_name=u'手机号码', max_length=11, blank=True, null=True)
     email = models.EmailField(verbose_name=u'邮箱', max_length=32, blank=True, null=True)
     openid = models.TextField(verbose_name=u'微信openid', default='')
     avatar = models.TextField(verbose_name='头像', default='')
@@ -20,10 +20,10 @@ class User(BaseModel):
     age = models.IntegerField(verbose_name='年龄', default=18)
 
     def to_json(self):
-        return obj2dic(self, ['id', 'created', 'username'], {})
+        return obj2dic(self, ['id', 'created'], {})
 
     def to_simple_json(self):
-        return obj2dic(self, ['id', 'username'], {})
+        return obj2dic(self, ['id'], {})
 
     class Meta:
         ordering = ['id']

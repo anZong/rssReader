@@ -1,0 +1,10 @@
+<!--pages/post/list.wxml-->
+<view class='container'>
+    <view class='cells'>
+        <view class='cell' wx:for='{{posts}}' wx:key='{{index}}' bindtap='gotoDetail' data-id='{{item.id}}'>
+            <view class='cell_hd'></view>
+            <view class='cell_bd'>{{item.title}}</view>
+            <view class='cell_ft'>{{item.published}}</view>
+        </view>
+    </view>
+</view>

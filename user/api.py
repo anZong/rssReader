@@ -1,4 +1,5 @@
 # coding:UTF-8
+import json
 from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 
@@ -52,7 +53,7 @@ class UserApiView(ApiView):
         }
 
     @unlogin
-    def wxa_login(self, params, appid, appsecret, code, phone):
+    def wxa_login(self, params, appid, appsecret, code):
         wxserver = 'https://api.weixin.qq.com/sns/jscode2session'
         params = {
             'appid': appid,
@@ -64,18 +65,23 @@ class UserApiView(ApiView):
             res = py3get(wxserver, params)
         except Exception as e:
             raise e
-
+        res = json.loads(res)
         openid = res.get('openid')
         user = User.objects.filter(openid=openid).first()
         if not user:
             user = User.objects.create()
             dic2obj(params, ['username', 'phone', 'nickname', 'avatar', 'gender', 'country', 'province', 'city'], user)
+            user.openid = openid
             user.save()
 
         self.session_set('me', user.to_simple_json())
-        self.get_session().save()
+        session = self.get_session()
+        session.save()
+        ids = Feed2User.objects.filter(owner_user_id=user.id).values_list('owner_feed_id', flat=True)
+        feeds = Feed.objects.filter(id__in=ids)
         return {
-            'rssList': self.rss_list()
+            'sessionid': session.session_key,
+            'feeds': gen_pager_array(feeds, {})
         }
 
     @logined
@@ -92,10 +98,17 @@ class UserApiView(ApiView):
             feed.save()
             Post.create_by_entries(feed.id, feed_data.get('entries'))
         Feed2User.objects.create(owner_user_id=self.get_meid(), owner_feed=feed)
-        res = Post.objects.filter(owner_feed_id=feed.id)
         return {
-            'posts': gen_pager_array(res, params)
+            'id': feed.id,
+            'title': feed.title,
+            'subtitle': feed.subtitle,
+            'url': url,
         }
+
+    @logined
+    def search_rss(self, params, kw):
+        query = Feed.objects.filter(title__icontains=kw)
+        return gen_pager_array(query, params)
 
     @logined
     def refresh_posts(self, params, feed_id):
@@ -112,10 +125,24 @@ class UserApiView(ApiView):
 
     @logined
     def posts(self, params, feed_id):
-        res = Post.objects.filter(owner_feed_id=feed_id)
+        res = Post.objects.filter(owner_feed_id=feed_id).order_by('-published')
         return {
-            'posts': gen_pager_array(res, params)
+            'posts': gen_pager_array(query=res, params=params)
         }
+
+    @logined
+    def post(self, params, post_id):
+        post = Post.objects.filter(id=post_id).first()
+        if not post:
+            raise Exception('不存在该文章')
+        return {
+            'post': post.to_detail_json()
+        }
+
+    @unlogin
+    def parse_rss(self, url):
+        res = get_feed(url)
+        return res.get('rawdata')
 
 
 urlpatterns = [

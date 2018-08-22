@@ -50,7 +50,10 @@ class Post(BaseModel):
         return res
 
     def to_json(self):
-        return obj2dic(self, ['id', 'title', 'published', 'author', 'link', 'summary', 'content'], {})
+        return obj2dic(self, ['id', 'title', 'published', 'author', 'link'], {})
+
+    def to_detail_json(self):
+        return obj2dic(self, ['summary', 'content'], self.to_json())
 
     class Meta:
         verbose_name = '文章'
